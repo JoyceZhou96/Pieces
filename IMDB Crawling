@@ -1,0 +1,37 @@
+import re
+import time
+from urllib.request import urlopen
+import random
+import pandas
+
+
+url = "https://www.imdb.com/title/tt7286456/reviews?sort=submissionDate&dir=desc&ratingFilter=0"
+
+title_path = 'class="title" > (.*?)</a>'                              
+rank_path = '<span>([0-9]*)</span>'                                   
+content_path = '<div class="text show-more__control">(.*?)</div>'     
+date_path = '<span class="review-date">(.*?)</span>'                  
+page_path = 'data-key="([0-9a-z]*)"'
+df = pandas.DataFrame()
+
+for i in range(0,2):     # set how many pages you want to collect          
+    sleepTime = random.random() * 2 + 3
+    time.sleep(sleepTime)
+    webpage = urlopen(url)
+    webpage = str(webpage.read())
+
+    title = re.compile(title_path).findall(webpage)
+    rank = re.compile(rank_path).findall(webpage)
+    content = re.compile(content_path).findall(webpage)
+    date = re.compile(date_path).findall(webpage)
+    next_page = re.findall(page_path,webpage)
+
+    url = url+"&ref_=undefined&paginationKey="+next_page[0]
+
+    data = pandas.DataFrame((title, rank, content,date)).transpose()
+    df = df.append(data, ignore_index=True)
+
+
+
+df.to_csv("IMDB_test.csv",index=True,sep=',')
+
